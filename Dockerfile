@@ -12,37 +12,35 @@ ENV LC_ALL     en_US.UTF-8
 CMD ["/sbin/my_init"]
 
 # PHP
-RUN apt-get update && \
+RUN add-apt-repository ppa:ondrej/php-7.0 && \
+    apt-get update && \
     DEBIAN_FRONTEND="noninteractive" apt-get install --yes \
-        php-pear        \
-        php5-cli        \
-        php5-common     \
-        php5-curl       \
-        php5-gd         \
-        php5-imagick    \
-        php5-imap       \
-        php5-intl       \
-        php5-json       \
-        php5-ldap       \
-        php5-mcrypt     \
-        php5-memcache   \
-        php5-mysql      \
-        php5-redis      \
-        php5-sqlite     \
-        php5-tidy       \
-        php5-xhprof
-RUN php5enmod \
-    mcrypt \
-    xhprof
-RUN sed -ir 's@^#@//@' /etc/php5/mods-available/*
+        php-cli         \
+        php-common      \
+        php-curl        \
+        php-gd          \
+        php-imap        \
+        php-intl        \
+        php-ldap        \
+        php-mysql       \
+        php-sqlite3     \
+        php-tidy
+        # php-imagick
+        # php-memcache
+        # php-mcrypt
+        # php-redis
+        # php-xhprof
+# RUN php5enmod \
+#     mcrypt \
+#     xhprof
 
 RUN apt-get update && \
     DEBIAN_FRONTEND="noninteractive" apt-get install --yes \
         git         \
-        php5-dev
+        php-dev
 
 # Xdebug
-ENV XDEBUG_VERSION='XDEBUG_2_3_3'
+ENV XDEBUG_VERSION='XDEBUG_2_4_0beta1'
 RUN git clone -b $XDEBUG_VERSION --depth 1 https://github.com/xdebug/xdebug.git /usr/local/src/xdebug
 RUN cd /usr/local/src/xdebug && \
     phpize      && \
@@ -50,23 +48,23 @@ RUN cd /usr/local/src/xdebug && \
     make clean  && \
     make        && \
     make install
-COPY ./conf/php5/mods-available/xdebug.ini /etc/php5/mods-available/xdebug.ini
-RUN php5enmod xdebug
+COPY ./conf/php/mods-available/xdebug.ini /etc/php/7.0/mods-available/xdebug.ini
+RUN ln -s /etc/php/7.0/mods-available/xdebug.ini /etc/php/7.0/cli/conf.d/20-xdebug.ini
 
 # Apache
 RUN apt-get update && \
     DEBIAN_FRONTEND="noninteractive" apt-get install --yes \
         apache2                 \
-        libapache2-mod-php5     \
+        libapache2-mod-php     \
         ssl-cert
 RUN service apache2 stop
 RUN a2enmod \
     headers     \
     rewrite
-RUN php5enmod -s apache2 \
-    mcrypt \
-    xhprof \
-    xdebug
+# RUN php5enmod -s apache2 \
+#     mcrypt \
+#     xhprof \
+RUN ln -s /etc/php/7.0/mods-available/xdebug.ini /etc/php/7.0/apache2/conf.d/20-xdebug.ini
 RUN a2dissite 000-default
 ENV APACHE_RUN_USER www-data
 ENV APACHE_RUN_GROUP www-data
@@ -85,7 +83,7 @@ RUN apt-get update && \
         mysql-client
 RUN curl -sS https://getcomposer.org/installer | \
     php -- --install-dir=/usr/local/bin --filename=composer
-ENV DRUSH_VERSION='7.1.0'
+ENV DRUSH_VERSION='8.0.0-rc3'
 RUN git clone -b $DRUSH_VERSION --depth 1 https://github.com/drush-ops/drush.git /usr/local/src/drush
 RUN cd /usr/local/src/drush && composer install
 RUN ln -s /usr/local/src/drush/drush /usr/local/bin/drush
@@ -97,8 +95,8 @@ RUN chmod +x /usr/local/bin/drush-remote
 RUN mkdir /var/www_files && \
     chgrp www-data /var/www_files && \
     chmod 775 /var/www_files
-COPY ./conf/php5/apache2/php.ini /etc/php5/apache2/php.ini
-COPY ./conf/php5/cli/php.ini /etc/php5/cli/php.ini
+COPY ./conf/php/apache2/php.ini /etc/php/7.0/apache2/php.ini
+COPY ./conf/php/cli/php.ini /etc/php/7.0/cli/php.ini
 COPY ./conf/apache2/sites-available /etc/apache2/sites-available
 COPY ./conf/ssh/sshd_config /etc/ssh/sshd_config
 RUN a2ensite default default-ssl
