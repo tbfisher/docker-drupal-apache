@@ -1,6 +1,6 @@
 # http://phusion.github.io/baseimage-docker/
 # https://github.com/phusion/baseimage-docker/blob/master/Changelog.md
-FROM phusion/baseimage:0.9.17
+FROM phusion/baseimage:0.9.18
 
 MAINTAINER Brian Fisher <tbfisher@gmail.com>
 
@@ -91,6 +91,13 @@ RUN drush -y dl --destination=/usr/local/src/drush/commands registry_rebuild
 COPY ./conf/drush/drush-remote.sh /usr/local/bin/drush-remote
 RUN chmod +x /usr/local/bin/drush-remote
 
+# sSMTP
+# note php is configured to use ssmtp, which is configured to send to mail:1025,
+# which is standard configuration for a mailhog/mailhog image with hostname mail.
+RUN apt-get update && \
+    DEBIAN_FRONTEND="noninteractive" apt-get install --yes \
+        ssmtp
+
 # Configure
 RUN mkdir /var/www_files && \
     chgrp www-data /var/www_files && \
@@ -99,6 +106,7 @@ COPY ./conf/php/apache2/php.ini /etc/php/7.0/apache2/php.ini
 COPY ./conf/php/cli/php.ini /etc/php/7.0/cli/php.ini
 COPY ./conf/apache2/sites-available /etc/apache2/sites-available
 COPY ./conf/ssh/sshd_config /etc/ssh/sshd_config
+COPY ./conf/ssmtp/ssmtp.conf /etc/ssmtp/ssmtp.conf
 RUN a2ensite default default-ssl
 
 # Use baseimage-docker's init system.
