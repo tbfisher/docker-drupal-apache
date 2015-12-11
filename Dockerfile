@@ -78,6 +78,7 @@ ENV APACHE_PID_FILE /var/run/apache2.pid
 RUN apt-get update && \
     DEBIAN_FRONTEND="noninteractive" apt-get install --yes \
         openssh-server
+RUN dpkg-reconfigure openssh-server
 
 # Drush
 RUN apt-get update && \
