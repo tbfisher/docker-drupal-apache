@@ -18,6 +18,8 @@ RUN add-apt-repository ppa:ondrej/php-7.0 && \
         php-cli         \
         php-common      \
         php-curl        \
+        php-dev         \
+        php-fpm         \
         php-gd          \
         php-imap        \
         php-intl        \
@@ -30,17 +32,13 @@ RUN add-apt-repository ppa:ondrej/php-7.0 && \
         # php-mcrypt
         # php-redis
         # php-xhprof
-# RUN php5enmod \
-#     mcrypt \
-#     xhprof
 
 RUN apt-get update && \
     DEBIAN_FRONTEND="noninteractive" apt-get install --yes \
-        git         \
-        php-dev
+        git
 
 # Xdebug
-ENV XDEBUG_VERSION='XDEBUG_2_4_0RC3'
+ENV XDEBUG_VERSION='XDEBUG_2_4_0RC4'
 RUN git clone -b $XDEBUG_VERSION --depth 1 https://github.com/xdebug/xdebug.git /usr/local/src/xdebug
 RUN cd /usr/local/src/xdebug && \
     phpize      && \
@@ -49,22 +47,19 @@ RUN cd /usr/local/src/xdebug && \
     make        && \
     make install
 COPY ./conf/php/mods-available/xdebug.ini /etc/php/7.0/mods-available/xdebug.ini
-RUN ln -s /etc/php/7.0/mods-available/xdebug.ini /etc/php/7.0/cli/conf.d/20-xdebug.ini
 
 # Apache
-RUN apt-get update && \
+RUN add-apt-repository 'deb http://us.archive.ubuntu.com/ubuntu/ trusty multiverse' && \
+    add-apt-repository 'deb http://us.archive.ubuntu.com/ubuntu/ trusty-updates multiverse' && \
+    apt-get update && \
     DEBIAN_FRONTEND="noninteractive" apt-get install --yes \
         apache2                 \
-        libapache2-mod-php     \
+        libapache2-mod-fastcgi  \
         ssl-cert
 RUN service apache2 stop
 RUN a2enmod \
     headers     \
     rewrite
-# RUN php5enmod -s apache2 \
-#     mcrypt \
-#     xhprof \
-RUN ln -s /etc/php/7.0/mods-available/xdebug.ini /etc/php/7.0/apache2/conf.d/20-xdebug.ini
 RUN a2dissite 000-default
 ENV APACHE_RUN_USER www-data
 ENV APACHE_RUN_GROUP www-data
@@ -92,7 +87,7 @@ COPY ./conf/drush/drush-remote.sh /usr/local/bin/drush-remote
 RUN chmod +x /usr/local/bin/drush-remote
 
 # Drupal Console.
-ENV DRUPALCONSOLE_VERSION='0.10.9'
+ENV DRUPALCONSOLE_VERSION='0.10.11'
 RUN git clone -b $DRUPALCONSOLE_VERSION --depth 1 https://github.com/hechoendrupal/DrupalConsole.git /usr/local/src/drupalconsole
 RUN cd /usr/local/src/drupalconsole && composer install
 RUN ln -s /usr/local/src/drupalconsole/bin/console /usr/local/bin/drupal
@@ -108,11 +103,21 @@ RUN apt-get update && \
 RUN mkdir /var/www_files && \
     chgrp www-data /var/www_files && \
     chmod 775 /var/www_files
-COPY ./conf/php/apache2/php.ini /etc/php/7.0/apache2/php.ini
+COPY ./conf/php/fpm/php.ini /etc/php/7.0/fpm/php.ini
+COPY ./conf/php/fpm/pool.d/www.conf /etc/php/7.0/fpm/pool.d/www.conf
 COPY ./conf/php/cli/php.ini /etc/php/7.0/cli/php.ini
+COPY ./conf/apache2/apache2.conf /etc/apache2/apache2.conf
+COPY ./conf/apache2/conf-available/php5-fpm.conf /etc/apache2/conf-available/php5-fpm.conf
 COPY ./conf/apache2/sites-available /etc/apache2/sites-available
 COPY ./conf/ssh/sshd_config /etc/ssh/sshd_config
 COPY ./conf/ssmtp/ssmtp.conf /etc/ssmtp/ssmtp.conf
+RUN phpenmod \
+    fpm    \
+    xdebug
+    # mcrypt
+    # xhprof
+RUN a2enmod actions
+RUN a2enconf php5-fpm
 RUN a2ensite default default-ssl
 
 # Use baseimage-docker's init system.
