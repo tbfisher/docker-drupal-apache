@@ -19,6 +19,8 @@ RUN add-apt-repository ppa:ondrej/php5 && \
         php5-cli        \
         php5-common     \
         php5-curl       \
+        php5-dev        \
+        php5-fpm        \
         php5-gd         \
         php5-imagick    \
         php5-imap       \
@@ -32,15 +34,10 @@ RUN add-apt-repository ppa:ondrej/php5 && \
         php5-sqlite     \
         php5-tidy       \
         php5-xhprof
-RUN php5enmod \
-    mcrypt \
-    xhprof
-RUN sed -ir 's@^#@//@' /etc/php5/mods-available/*
 
 RUN apt-get update && \
     DEBIAN_FRONTEND="noninteractive" apt-get install --yes \
-        git         \
-        php5-dev
+        git
 
 # Xdebug
 ENV XDEBUG_VERSION='XDEBUG_2_3_3'
@@ -52,13 +49,14 @@ RUN cd /usr/local/src/xdebug && \
     make        && \
     make install
 COPY ./conf/php5/mods-available/xdebug.ini /etc/php5/mods-available/xdebug.ini
-RUN php5enmod xdebug
 
 # Apache
-RUN apt-get update && \
+RUN add-apt-repository 'deb http://us.archive.ubuntu.com/ubuntu/ trusty multiverse' && \
+    add-apt-repository 'deb http://us.archive.ubuntu.com/ubuntu/ trusty-updates multiverse' && \
+    apt-get update && \
     DEBIAN_FRONTEND="noninteractive" apt-get install --yes \
         apache2                 \
-        libapache2-mod-php5     \
+        libapache2-mod-fastcgi  \
         ssl-cert
 RUN service apache2 stop
 RUN a2enmod \
@@ -95,7 +93,7 @@ COPY ./conf/drush/drush-remote.sh /usr/local/bin/drush-remote
 RUN chmod +x /usr/local/bin/drush-remote
 
 # Drupal Console.
-ENV DRUPALCONSOLE_VERSION='0.10.9'
+ENV DRUPALCONSOLE_VERSION='0.10.11'
 RUN git clone -b $DRUPALCONSOLE_VERSION --depth 1 https://github.com/hechoendrupal/DrupalConsole.git /usr/local/src/drupalconsole
 RUN cd /usr/local/src/drupalconsole && composer install
 RUN ln -s /usr/local/src/drupalconsole/bin/console /usr/local/bin/drupal
@@ -111,11 +109,23 @@ RUN apt-get update && \
 RUN mkdir /var/www_files && \
     chgrp www-data /var/www_files && \
     chmod 775 /var/www_files
-COPY ./conf/php5/apache2/php.ini /etc/php5/apache2/php.ini
+COPY ./conf/php5/fpm/php.ini /etc/php5/fpm/php.ini
+COPY ./conf/php5/fpm/pool.d/www.conf /etc/php5/fpm/pool.d/www.conf
 COPY ./conf/php5/cli/php.ini /etc/php5/cli/php.ini
+COPY ./conf/apache2/apache2.conf /etc/apache2/apache2.conf
+COPY ./conf/apache2/conf-available/php5-fpm.conf /etc/apache2/conf-available/php5-fpm.conf
 COPY ./conf/apache2/sites-available /etc/apache2/sites-available
 COPY ./conf/ssh/sshd_config /etc/ssh/sshd_config
 COPY ./conf/ssmtp/ssmtp.conf /etc/ssmtp/ssmtp.conf
+# prevent php warnings
+RUN sed -ir 's@^#@//@' /etc/php5/mods-available/*
+RUN php5enmod \
+    fpm    \
+    mcrypt \
+    xdebug \
+    xhprof
+RUN a2enmod actions
+RUN a2enconf php5-fpm
 RUN a2ensite default default-ssl
 
 # Use baseimage-docker's init system.
