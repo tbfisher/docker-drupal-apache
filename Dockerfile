@@ -18,6 +18,7 @@ RUN apt-get update && \
         php5-cli        \
         php5-common     \
         php5-curl       \
+        php5-dev        \
         php5-fpm        \
         php5-gd         \
         php5-imagick    \
@@ -32,16 +33,10 @@ RUN apt-get update && \
         php5-sqlite     \
         php5-tidy       \
         php5-xhprof
-RUN php5enmod \
-    fpm    \
-    mcrypt \
-    xhprof
-RUN sed -ir 's@^#@//@' /etc/php5/mods-available/*
 
 RUN apt-get update && \
     DEBIAN_FRONTEND="noninteractive" apt-get install --yes \
-        git         \
-        php5-dev
+        git
 
 # Xdebug
 ENV XDEBUG_VERSION='XDEBUG_2_3_3'
@@ -53,7 +48,6 @@ RUN cd /usr/local/src/xdebug && \
     make        && \
     make install
 COPY ./conf/php5/mods-available/xdebug.ini /etc/php5/mods-available/xdebug.ini
-RUN php5enmod xdebug
 
 # Apache
 RUN add-apt-repository 'deb http://us.archive.ubuntu.com/ubuntu/ trusty multiverse' && \
@@ -122,6 +116,13 @@ COPY ./conf/apache2/conf-available/php5-fpm.conf /etc/apache2/conf-available/php
 COPY ./conf/apache2/sites-available /etc/apache2/sites-available
 COPY ./conf/ssh/sshd_config /etc/ssh/sshd_config
 COPY ./conf/ssmtp/ssmtp.conf /etc/ssmtp/ssmtp.conf
+# prevent php warnings
+RUN sed -ir 's@^#@//@' /etc/php5/mods-available/*
+RUN php5enmod \
+    fpm    \
+    mcrypt \
+    xdebug \
+    xhprof
 RUN a2enmod actions
 RUN a2enconf php5-fpm
 RUN a2ensite default default-ssl
