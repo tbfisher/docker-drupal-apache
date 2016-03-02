@@ -15,23 +15,24 @@ CMD ["/sbin/my_init"]
 RUN add-apt-repository ppa:ondrej/php && \
     apt-get update && \
     DEBIAN_FRONTEND="noninteractive" apt-get install --yes \
-        php-cli         \
-        php-common      \
-        php-curl        \
-        php-dev         \
-        php-fpm         \
-        php-gd          \
-        php-imagick     \
-        php-imap        \
-        php-intl        \
-        php-ldap        \
-        php-mcrypt      \
-        php-memcached   \
-        php-mysql       \
-        php-redis       \
-        php-sqlite3     \
-        php-tidy
-        # php-memcache
+        php-cli             \
+        php-common          \
+        php-curl            \
+        php-dev             \
+        php-fpm             \
+        php-gd              \
+        php-imagick         \
+        php-imap            \
+        php-intl            \
+        php-ldap            \
+        php-mcrypt          \
+        php-memcache        \
+        php-mysql           \
+        php-redis           \
+        php-sqlite3         \
+        php-tidy            \
+        php-uploadprogress  \
+        php-xml
         # php-xhprof
 
 RUN apt-get update && \
@@ -68,30 +69,11 @@ ENV APACHE_LOG_DIR /var/log/apache2
 ENV APACHE_LOCK_DIR /var/lock/apache2
 ENV APACHE_PID_FILE /var/run/apache2.pid
 
-# SSH (for remote drush)
+# SSH
 RUN apt-get update && \
     DEBIAN_FRONTEND="noninteractive" apt-get install --yes \
         openssh-server
 RUN dpkg-reconfigure openssh-server
-
-# Drush
-RUN apt-get update && \
-    DEBIAN_FRONTEND="noninteractive" apt-get install --yes \
-        mysql-client
-RUN curl -sS https://getcomposer.org/installer | \
-    php -- --install-dir=/usr/local/bin --filename=composer
-ENV DRUSH_VERSION='8.0.3'
-RUN git clone -b $DRUSH_VERSION --depth 1 https://github.com/drush-ops/drush.git /usr/local/src/drush
-RUN cd /usr/local/src/drush && composer install
-RUN ln -s /usr/local/src/drush/drush /usr/local/bin/drush
-COPY ./conf/drush/drush-remote.sh /usr/local/bin/drush-remote
-RUN chmod +x /usr/local/bin/drush-remote
-
-# Drupal Console.
-ENV DRUPALCONSOLE_VERSION='0.10.12'
-RUN git clone -b $DRUPALCONSOLE_VERSION --depth 1 https://github.com/hechoendrupal/DrupalConsole.git /usr/local/src/drupalconsole
-RUN cd /usr/local/src/drupalconsole && composer install
-RUN ln -s /usr/local/src/drupalconsole/bin/console /usr/local/bin/drupal
 
 # sSMTP
 # note php is configured to use ssmtp, which is configured to send to mail:1025,
@@ -113,10 +95,10 @@ COPY ./conf/apache2/sites-available /etc/apache2/sites-available
 COPY ./conf/ssh/sshd_config /etc/ssh/sshd_config
 COPY ./conf/ssmtp/ssmtp.conf /etc/ssmtp/ssmtp.conf
 RUN phpenmod \
-    fpm    \
+    # fpm    \
     mcrypt \
-    xdebug \
-    xhprof
+    xdebug
+    # xhprof
 RUN a2enmod actions
 RUN a2enconf php5-fpm
 RUN a2ensite default default-ssl
