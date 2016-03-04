@@ -42,7 +42,8 @@ RUN service php5-fpm stop
 
 RUN apt-get update && \
     DEBIAN_FRONTEND="noninteractive" apt-get install --yes \
-        git
+        git                 \
+        mysql-client
 
 # Apache
 RUN add-apt-repository 'deb http://us.archive.ubuntu.com/ubuntu/ trusty multiverse' && \
