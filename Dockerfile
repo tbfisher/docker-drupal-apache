@@ -80,13 +80,20 @@ RUN apt-get update && \
         ssmtp
 
 # Configure
+RUN cp /etc/php5/fpm/php.ini /etc/php5/fpm/php.ini.bak
 COPY ./conf/php5/fpm/php.ini /etc/php5/fpm/php.ini
+RUN cp /etc/php5/fpm/pool.d/www.conf /etc/php5/fpm/pool.d/www.conf.bak
 COPY ./conf/php5/fpm/pool.d/www.conf /etc/php5/fpm/pool.d/www.conf
+RUN cp /etc/php5/cli/php.ini /etc/php5/cli/php.ini.bak
 COPY ./conf/php5/cli/php.ini /etc/php5/cli/php.ini
+RUN cp /etc/apache2/apache2.conf /etc/apache2/apache2.conf.bak
 COPY ./conf/apache2/apache2.conf /etc/apache2/apache2.conf
 COPY ./conf/apache2/conf-available/php5-fpm.conf /etc/apache2/conf-available/php5-fpm.conf
+RUN cp -r /etc/apache2/sites-available /etc/apache2/sites-available.bak
 COPY ./conf/apache2/sites-available /etc/apache2/sites-available
+RUN cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak
 COPY ./conf/ssh/sshd_config /etc/ssh/sshd_config
+RUN cp /etc/ssmtp/ssmtp.conf /etc/ssmtp/ssmtp.conf.bak
 COPY ./conf/ssmtp/ssmtp.conf /etc/ssmtp/ssmtp.conf
 # Prevent php warnings
 RUN sed -ir 's@^#@//@' /etc/php5/mods-available/*
