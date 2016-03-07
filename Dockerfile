@@ -87,9 +87,9 @@ RUN apt-get update && \
 RUN mkdir /var/www_files && \
     chgrp www-data /var/www_files && \
     chmod 775 /var/www_files
-COPY ./conf/php/fpm/php.ini /etc/php/7.0/fpm/php.ini
+COPY ./conf/php/fpm/php.dev.ini /etc/php/7.0/fpm/php.ini
 COPY ./conf/php/fpm/pool.d/www.conf /etc/php/7.0/fpm/pool.d/www.conf
-COPY ./conf/php/cli/php.ini /etc/php/7.0/cli/php.ini
+COPY ./conf/php/cli/php.dev.ini /etc/php/7.0/cli/php.ini
 COPY ./conf/apache2/apache2.conf /etc/apache2/apache2.conf
 COPY ./conf/apache2/conf-available/php5-fpm.conf /etc/apache2/conf-available/php5-fpm.conf
 COPY ./conf/apache2/sites-available /etc/apache2/sites-available
