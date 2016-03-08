@@ -77,9 +77,6 @@ RUN apt-get update && \
         ssmtp
 
 # Configure
-RUN mkdir /var/www_files && \
-    chgrp www-data /var/www_files && \
-    chmod 775 /var/www_files
 COPY ./conf/php5/fpm/php.ini /etc/php5/fpm/php.ini
 COPY ./conf/php5/fpm/pool.d/www.conf /etc/php5/fpm/pool.d/www.conf
 COPY ./conf/php5/cli/php.ini /etc/php5/cli/php.ini
@@ -98,11 +95,21 @@ RUN a2enmod actions
 RUN a2enconf php5-fpm
 RUN a2ensite default default-ssl
 
+# Configure directories for drupal.
+RUN mkdir /var/www_files && \
+    mkdir -p /var/www_files/public && \
+    mkdir -p /var/www_files/private && \
+    chown -R www-data:www-data /var/www_files
+# Virtualhost is configured to serve from /var/www/web.
+RUN mkdir /var/www/web && \
+    chgrp www-data /var/www_files && \
+    chmod 775 /var/www_files
+
 # Use baseimage-docker's init system.
 ADD init/ /etc/my_init.d/
+RUN chmod -v +x /etc/my_init.d/*.sh
 ADD services/ /etc/service/
 RUN chmod -v +x /etc/service/*/run
-RUN chmod -v +x /etc/my_init.d/*.sh
 
 EXPOSE 80 443 22
 
