@@ -52,9 +52,10 @@ RUN add-apt-repository 'deb http://us.archive.ubuntu.com/ubuntu/ trusty multiver
         libapache2-mod-fastcgi  \
         ssl-cert
 RUN service apache2 stop
-RUN a2enmod \
+RUN a2enmod     \
     headers     \
-    rewrite
+    rewrite     \
+    ssl
 RUN php5enmod -s apache2 \
     mcrypt \
     xhprof \
