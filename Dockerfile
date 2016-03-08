@@ -104,6 +104,7 @@ RUN mkdir /var/www_files && \
     chown -R www-data:www-data /var/www_files
 # Virtualhost is configured to serve from /var/www/web.
 RUN mkdir /var/www/web && \
+    echo '<?php phpinfo();' > /var/www/web/index.php && \
     chgrp www-data /var/www_files && \
     chmod 775 /var/www_files
 
