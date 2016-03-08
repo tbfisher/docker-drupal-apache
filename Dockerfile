@@ -37,6 +37,7 @@ RUN add-apt-repository ppa:ondrej/php5 && \
         php5-sqlite     \
         php5-tidy       \
         php5-xhprof
+RUN service php5-fpm stop
 
 RUN apt-get update && \
     DEBIAN_FRONTEND="noninteractive" apt-get install --yes \
@@ -120,10 +121,9 @@ COPY ./conf/apache2/conf-available/php5-fpm.conf /etc/apache2/conf-available/php
 COPY ./conf/apache2/sites-available /etc/apache2/sites-available
 COPY ./conf/ssh/sshd_config /etc/ssh/sshd_config
 COPY ./conf/ssmtp/ssmtp.conf /etc/ssmtp/ssmtp.conf
-# prevent php warnings
+# Prevent php warnings
 RUN sed -ir 's@^#@//@' /etc/php5/mods-available/*
 RUN php5enmod \
-    fpm    \
     mcrypt \
     xdebug \
     xhprof
