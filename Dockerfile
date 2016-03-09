@@ -79,6 +79,16 @@ RUN apt-get update && \
     DEBIAN_FRONTEND="noninteractive" apt-get install --yes \
         ssmtp
 
+# Drush, console
+RUN cd /usr/local/bin/ && \
+    curl http://files.drush.org/drush.phar -L -o drush && \
+    chmod +x drush
+COPY ./conf/drush/drush-remote.sh /usr/local/bin/drush-remote
+RUN chmod +x /usr/local/bin/drush-remote
+RUN cd /usr/local/bin/ && \
+    curl https://drupalconsole.com/installer -L -o drupal && \
+    chmod +x drupal
+
 # Configure
 RUN cp /etc/php5/fpm/php.ini /etc/php5/fpm/php.ini.bak
 COPY ./conf/php5/fpm/php.ini /etc/php5/fpm/php.ini
