@@ -69,7 +69,10 @@ ENV APACHE_LOCK_DIR /var/lock/apache2
 ENV APACHE_PID_FILE /var/run/apache2.pid
 
 # SSH (for remote drush)
-RUN rm -f /etc/service/sshd/down
+RUN apt-get update && \
+    DEBIAN_FRONTEND="noninteractive" apt-get install --yes \
+        openssh-server
+RUN dpkg-reconfigure openssh-server
 
 # sSMTP
 # note php is configured to use ssmtp, which is configured to send to mail:1025,
