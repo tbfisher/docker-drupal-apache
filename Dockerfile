@@ -58,10 +58,6 @@ RUN a2enmod     \
     headers     \
     rewrite     \
     ssl
-RUN php5enmod -s apache2 \
-    mcrypt \
-    xhprof \
-    xdebug
 RUN a2dissite 000-default
 ENV APACHE_RUN_USER www-data
 ENV APACHE_RUN_GROUP www-data
