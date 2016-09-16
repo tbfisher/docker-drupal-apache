@@ -1,6 +1,6 @@
 # http://phusion.github.io/baseimage-docker/
 # https://github.com/phusion/baseimage-docker/blob/master/Changelog.md
-FROM phusion/baseimage:0.9.18
+FROM phusion/baseimage:0.9.19
 
 MAINTAINER Brian Fisher <tbfisher@gmail.com>
 
@@ -15,35 +15,32 @@ CMD ["/sbin/my_init"]
 RUN apt-get update && apt-get upgrade -y -o Dpkg::Options::="--force-confold"
 
 # PHP
-RUN add-apt-repository ppa:ondrej/php5-5.6 && \
+RUN add-apt-repository ppa:ondrej/php && \
     apt-get update && \
     DEBIAN_FRONTEND="noninteractive" apt-get install --yes \
-        php-pear        \
-        php5-cli        \
-        php5-common     \
-        php5-curl       \
-        php5-dev        \
-        php5-fpm        \
-        php5-gd         \
-        php5-imagick    \
-        php5-imap       \
-        php5-intl       \
-        php5-json       \
-        php5-ldap       \
-        php5-mcrypt     \
-        php5-memcache   \
-        php5-mysql      \
-        php5-redis      \
-        php5-sqlite     \
-        php5-tidy       \
-        php5-xdebug
-        # php5-xhprof
-RUN service php5-fpm stop
-
-RUN apt-get update && \
-    DEBIAN_FRONTEND="noninteractive" apt-get install --yes \
-        git                 \
-        mysql-client
+        php-pear          \
+        php5.6-cli        \
+        php5.6-common     \
+        php5.6-curl       \
+        php5.6-dev        \
+        php5.6-fpm        \
+        php5.6-gd         \
+        php5.6-imagick    \
+        php5.6-imap       \
+        php5.6-intl       \
+        php5.6-json       \
+        php5.6-ldap       \
+        php5.6-mbstring   \
+        php5.6-mcrypt     \
+        php5.6-memcache   \
+        php5.6-mysql      \
+        php5.6-redis      \
+        php5.6-sqlite     \
+        php5.6-tidy       \
+        php5.6-xdebug     \
+        php5.6-xhprof     \
+        php5.6-xml        \
+        php5.6-zip
 
 # Apache
 RUN add-apt-repository 'deb http://us.archive.ubuntu.com/ubuntu/ trusty multiverse' && \
@@ -70,6 +67,7 @@ RUN apt-get update && \
     DEBIAN_FRONTEND="noninteractive" apt-get install --yes \
         openssh-server
 RUN dpkg-reconfigure openssh-server
+RUN usermod -G ssl-cert www-data
 
 # sSMTP
 # note php is configured to use ssmtp, which is configured to send to mail:1025,
@@ -88,31 +86,44 @@ RUN cd /usr/local/bin/ && \
     curl https://drupalconsole.com/installer -L -o drupal && \
     chmod +x drupal
 
-# Configure
-RUN cp /etc/php5/fpm/php.ini /etc/php5/fpm/php.ini.bak
-COPY ./conf/php5/fpm/php.ini /etc/php5/fpm/php.ini
-RUN cp /etc/php5/fpm/pool.d/www.conf /etc/php5/fpm/pool.d/www.conf.bak
-COPY ./conf/php5/fpm/pool.d/www.conf /etc/php5/fpm/pool.d/www.conf
-RUN cp /etc/php5/cli/php.ini /etc/php5/cli/php.ini.bak
-COPY ./conf/php5/cli/php.ini /etc/php5/cli/php.ini
+# Required for drush, convenience utilities, etc.
+RUN apt-get update && \
+    DEBIAN_FRONTEND="noninteractive" apt-get install --yes \
+        git                 \
+        mysql-client        \
+        screen
+
+# Configure PHP
+RUN mkdir /run/php
+RUN cp /etc/php/5.6/fpm/php.ini /etc/php/5.6/fpm/php.ini.bak
+COPY ./conf/php/fpm/php.ini-development /etc/php/5.6/fpm/php.ini
+# COPY /conf/php/fpm/php.ini-production /etc/php/5.6/fpm/php.ini
+RUN cp /etc/php/5.6/fpm/pool.d/www.conf /etc/php/5.6/fpm/pool.d/www.conf.bak
+COPY /conf/php/fpm/pool.d/www.conf /etc/php/5.6/fpm/pool.d/www.conf
+RUN cp /etc/php/5.6/cli/php.ini /etc/php/5.6/cli/php.ini.bak
+COPY /conf/php/cli/php.ini /etc/php/5.6/cli/php.ini
+# Prevent php warnings
+RUN sed -ir 's@^#@//@' /etc/php/5.6/mods-available/*
+RUN phpenmod \
+    mcrypt \
+    xdebug \
+    xhprof
+
+# Configure Apache
 RUN cp /etc/apache2/apache2.conf /etc/apache2/apache2.conf.bak
 COPY ./conf/apache2/apache2.conf /etc/apache2/apache2.conf
 COPY ./conf/apache2/conf-available/php5-fpm.conf /etc/apache2/conf-available/php5-fpm.conf
 RUN cp -r /etc/apache2/sites-available /etc/apache2/sites-available.bak
 COPY ./conf/apache2/sites-available /etc/apache2/sites-available
+RUN a2enmod actions
+RUN a2enconf php5-fpm
+RUN a2ensite default default-ssl
+
+# Configure sshd
 RUN cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak
 COPY ./conf/ssh/sshd_config /etc/ssh/sshd_config
 RUN cp /etc/ssmtp/ssmtp.conf /etc/ssmtp/ssmtp.conf.bak
 COPY ./conf/ssmtp/ssmtp.conf /etc/ssmtp/ssmtp.conf
-# Prevent php warnings
-RUN sed -ir 's@^#@//@' /etc/php5/mods-available/*
-RUN php5enmod \
-    mcrypt \
-    xdebug \
-    xhprof
-RUN a2enmod actions
-RUN a2enconf php5-fpm
-RUN a2ensite default default-ssl
 
 # Configure directories for drupal.
 RUN mkdir /var/www_files && \
@@ -121,7 +132,7 @@ RUN mkdir /var/www_files && \
     chown -R www-data:www-data /var/www_files
 VOLUME /var/www_files
 # Virtualhost is configured to serve from /var/www/web.
-RUN mkdir /var/www/web && \
+RUN mkdir -p /var/www/web && \
     echo '<?php phpinfo();' > /var/www/web/index.php && \
     chgrp www-data /var/www_files && \
     chmod 775 /var/www_files
