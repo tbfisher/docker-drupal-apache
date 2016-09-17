@@ -296,7 +296,7 @@ serialize_precision = 17
 ; This directive allows you to disable certain functions for security reasons.
 ; It receives a comma-delimited list of function names.
 ; http://php.net/disable-functions
-disable_functions = pcntl_alarm,pcntl_fork,pcntl_waitpid,pcntl_wait,pcntl_wifexited,pcntl_wifstopped,pcntl_wifsignaled,pcntl_wifcontinued,pcntl_wexitstatus,pcntl_wtermsig,pcntl_wstopsig,pcntl_signal,pcntl_signal_dispatch,pcntl_get_last_error,pcntl_strerror,pcntl_sigprocmask,pcntl_sigwaitinfo,pcntl_sigtimedwait,pcntl_exec,pcntl_getpriority,pcntl_setpriority,
+disable_functions =
 
 ; This directive allows you to disable certain classes for security reasons.
 ; It receives a comma-delimited list of class names.
@@ -324,14 +324,12 @@ disable_classes =
 ; the file operations performed.
 ; http://php.net/realpath-cache-size
 ;realpath_cache_size = 16k
-realpath_cache_size = 128K
 
 ; Duration of time, in seconds for which to cache realpath information for a given
 ; file or directory. For systems with rarely changing files, consider increasing this
 ; value.
 ; http://php.net/realpath-cache-ttl
 ;realpath_cache_ttl = 120
-realpath_cache_ttl = 3600
 
 ; Enables or disables the circular reference collector.
 ; http://php.net/zend.enable-gc
@@ -358,8 +356,7 @@ zend.enable_gc = On
 ; threat in any way, but it makes it possible to determine whether you use PHP
 ; on your server or not.
 ; http://php.net/expose-php
-;expose_php = On
-expose_php = Off
+expose_php = On
 
 ;;;;;;;;;;;;;;;;;;;
 ; Resource Limits ;
@@ -368,8 +365,7 @@ expose_php = Off
 ; Maximum execution time of each script, in seconds
 ; http://php.net/max-execution-time
 ; Note: This directive is hardcoded to 0 for the CLI SAPI
-;max_execution_time = 30
-max_execution_time = 120
+max_execution_time = 30
 
 ; Maximum amount of time each script may spend parsing request data. It's a good
 ; idea to limit this time on productions servers in order to eliminate unexpectedly
@@ -387,11 +383,11 @@ max_input_time = 60
 
 ; How many GET/POST/COOKIE input variables may be accepted
 ; max_input_vars = 1000
+max_input_vars = 2000
 
 ; Maximum amount of memory a script may consume (128MB)
 ; http://php.net/memory-limit
-;memory_limit = 128M
-memory_limit = 256M
+memory_limit = -1
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Error handling and logging ;
@@ -571,7 +567,7 @@ html_errors = On
 ; http://php.net/error-log
 ; Example:
 ;error_log = php_errors.log
-error_log = /var/log/php-fpm.log
+error_log = /var/log/php-cli.log
 ; Log errors to syslog (Event Log on Windows).
 ;error_log = syslog
 
@@ -659,8 +655,7 @@ auto_globals_jit = On
 ; Its value may be 0 to disable the limit. It is ignored if POST data reading
 ; is disabled through enable_post_data_reading.
 ; http://php.net/post-max-size
-;post_max_size = 8M
-post_max_size = 64M
+post_max_size = 8M
 
 ; Automatically add files before PHP document.
 ; http://php.net/auto-prepend-file
@@ -765,7 +760,6 @@ enable_dl = Off
 ; to use SCRIPT_FILENAME rather than PATH_TRANSLATED.
 ; http://php.net/cgi.fix-pathinfo
 ;cgi.fix_pathinfo=1
-cgi.fix_pathinfo=0
 
 ; FastCGI under IIS (on WINNT based OS) supports the ability to impersonate
 ; security tokens of the calling client.  This allows IIS to define the
@@ -802,8 +796,7 @@ file_uploads = On
 
 ; Maximum allowed size for uploaded files.
 ; http://php.net/upload-max-filesize
-;upload_max_filesize = 2M
-upload_max_filesize = 64M
+upload_max_filesize = 2M
 
 ; Maximum number of files that can be uploaded via a single request
 max_file_uploads = 20
