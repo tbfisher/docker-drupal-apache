@@ -47,14 +47,17 @@ RUN add-apt-repository ppa:ondrej/php && \
 # Apache
 RUN add-apt-repository 'deb http://us.archive.ubuntu.com/ubuntu/ trusty multiverse' && \
     add-apt-repository 'deb http://us.archive.ubuntu.com/ubuntu/ trusty-updates multiverse' && \
+    add-apt-repository 'deb http://security.ubuntu.com/ubuntu  trusty-security main multiverse' && \
     apt-get update && \
     DEBIAN_FRONTEND="noninteractive" apt-get install --yes \
         apache2                 \
-        libapache2-mod-fastcgi  \
-        ssl-cert
-RUN a2enmod                     \
-    actions
-RUN service apache2 stop
+        libapache2-mod-fastcgi
+RUN a2enmod     \
+    alias       \
+    actions     \
+    fastcgi     \
+    headers     \
+    rewrite
 RUN a2dissite 000-default
 ENV APACHE_RUN_USER www-data
 ENV APACHE_RUN_GROUP www-data
@@ -67,7 +70,6 @@ RUN apt-get update && \
     DEBIAN_FRONTEND="noninteractive" apt-get install --yes \
         openssh-server
 RUN dpkg-reconfigure openssh-server
-RUN usermod -G ssl-cert www-data
 
 # sSMTP
 # note php is configured to use ssmtp, which is configured to send to mail:1025,
@@ -107,8 +109,8 @@ COPY /conf/php/cli/php.ini-development /etc/php/7.0/cli/php.ini
 RUN sed -ir 's@^#@//@' /etc/php/7.0/mods-available/*
 RUN phpenmod \
     mcrypt \
-    xdebug \
-    xhprof
+    xdebug
+    # xhprof
 
 # Configure Apache
 RUN cp /etc/apache2/apache2.conf /etc/apache2/apache2.conf.bak
@@ -118,7 +120,7 @@ COPY ./conf/apache2/conf-available/php7.0-fpm.conf /etc/apache2/conf-available/p
 RUN cp -r /etc/apache2/sites-available /etc/apache2/sites-available.bak
 COPY ./conf/apache2/sites-available /etc/apache2/sites-available
 RUN a2enconf php7.0-fpm
-RUN a2ensite default default-ssl
+RUN a2ensite default
 
 # Configure sshd
 RUN cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak
@@ -144,7 +146,7 @@ RUN chmod -v +x /etc/my_init.d/*.sh
 ADD services/ /etc/service/
 RUN chmod -v +x /etc/service/*/run
 
-EXPOSE 80 443 22
+EXPOSE 80 22
 
 # Clean up
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
