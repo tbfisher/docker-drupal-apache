@@ -45,16 +45,15 @@ RUN add-apt-repository ppa:ondrej/php && \
 # Apache
 RUN add-apt-repository 'deb http://us.archive.ubuntu.com/ubuntu/ trusty multiverse' && \
     add-apt-repository 'deb http://us.archive.ubuntu.com/ubuntu/ trusty-updates multiverse' && \
+    add-apt-repository 'deb http://security.ubuntu.com/ubuntu  trusty-security main multiverse' && \
     apt-get update && \
     DEBIAN_FRONTEND="noninteractive" apt-get install --yes \
         apache2                 \
-        libapache2-mod-fastcgi  \
-        ssl-cert
-RUN service apache2 stop
+        libapache2-mod-fastcgi
 RUN a2enmod     \
+    actions     \
     headers     \
-    rewrite     \
-    ssl
+    rewrite
 RUN a2dissite 000-default
 ENV APACHE_RUN_USER www-data
 ENV APACHE_RUN_GROUP www-data
@@ -67,7 +66,6 @@ RUN apt-get update && \
     DEBIAN_FRONTEND="noninteractive" apt-get install --yes \
         openssh-server
 RUN dpkg-reconfigure openssh-server
-RUN usermod -G ssl-cert www-data
 
 # sSMTP
 # note php is configured to use ssmtp, which is configured to send to mail:1025,
@@ -101,7 +99,8 @@ COPY ./conf/php/fpm/php.ini-development /etc/php/5.6/fpm/php.ini
 RUN cp /etc/php/5.6/fpm/pool.d/www.conf /etc/php/5.6/fpm/pool.d/www.conf.bak
 COPY /conf/php/fpm/pool.d/www.conf /etc/php/5.6/fpm/pool.d/www.conf
 RUN cp /etc/php/5.6/cli/php.ini /etc/php/5.6/cli/php.ini.bak
-COPY /conf/php/cli/php.ini /etc/php/5.6/cli/php.ini
+COPY /conf/php/cli/php.ini-development /etc/php/5.6/cli/php.ini
+# COPY /conf/php/cli/php.ini-production /etc/php/5.6/cli/php.ini
 # Prevent php warnings
 RUN sed -ir 's@^#@//@' /etc/php/5.6/mods-available/*
 RUN phpenmod \
@@ -115,9 +114,8 @@ COPY ./conf/apache2/apache2.conf /etc/apache2/apache2.conf
 COPY ./conf/apache2/conf-available/php5-fpm.conf /etc/apache2/conf-available/php5-fpm.conf
 RUN cp -r /etc/apache2/sites-available /etc/apache2/sites-available.bak
 COPY ./conf/apache2/sites-available /etc/apache2/sites-available
-RUN a2enmod actions
 RUN a2enconf php5-fpm
-RUN a2ensite default default-ssl
+RUN a2ensite default
 
 # Configure sshd
 RUN cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak
@@ -143,7 +141,7 @@ RUN chmod -v +x /etc/my_init.d/*.sh
 ADD services/ /etc/service/
 RUN chmod -v +x /etc/service/*/run
 
-EXPOSE 80 443 22
+EXPOSE 80 22
 
 # Clean up
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
