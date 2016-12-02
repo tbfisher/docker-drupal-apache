@@ -129,11 +129,11 @@ RUN phpenmod \
 # Configure Apache
 RUN cp /etc/apache2/apache2.conf /etc/apache2/apache2.conf.bak
 COPY ./conf/apache2/apache2.conf /etc/apache2/apache2.conf
-RUN cp /etc/apache2/conf-available/php7.0-fpm.conf /etc/apache2/conf-available/php7.0-fpm.conf.bak
-COPY ./conf/apache2/conf-available/php7.0-fpm.conf /etc/apache2/conf-available/php7.0-fpm.conf
+RUN cp /etc/apache2/conf-available/php7.1-fpm.conf /etc/apache2/conf-available/php7.1-fpm.conf.bak
+COPY ./conf/apache2/conf-available/php7.1-fpm.conf /etc/apache2/conf-available/php7.1-fpm.conf
 RUN cp -r /etc/apache2/sites-available /etc/apache2/sites-available.bak
 COPY ./conf/apache2/sites-available /etc/apache2/sites-available
-RUN a2enconf php7.0-fpm
+RUN a2enconf php7.1-fpm
 RUN a2ensite default
 
 # Configure sshd
